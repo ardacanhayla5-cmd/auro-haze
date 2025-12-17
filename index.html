@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auro Haze | Minimalist</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav>
+        <div class="logo" onclick="goHome()">AURO HAZE</div>
+        <div class="nav-links">
+            <div onclick="toggleCart()">SEPET (<span id="cart-count">0</span>)</div>
+        </div>
+    </nav>
+
+    <div id="home-view">
+        <header class="hero">
+            <div class="hero-content">
+                <h1>AURO HAZE</h1>
+                <p>Sadelikteki Şıklığı Keşfet</p>
+            </div>
+        </header>
+
+        <main class="container">
+            <h2 class="section-title">Yeni Koleksiyon</h2>
+            <div class="product-grid" id="product-grid">
+                </div>
+        </main>
+
+        <footer style="text-align: center; padding: 50px; color: #999; font-size: 0.8rem;">
+            © 2024 Auro Haze. Tüm Hakları Saklıdır.
+        </footer>
+    </div>
+
+    <div id="product-detail-view">
+        <div class="back-btn" onclick="goHome()">← Koleksiyona Dön</div>
+        
+        <div class="detail-container">
+            <img src="" id="detail-img" class="detail-image">
+            
+            <div class="detail-info">
+                <h1 id="detail-title" class="detail-title">Ürün Adı</h1>
+                <p id="detail-price" class="detail-price">0 TL</p>
+                <p class="detail-desc">
+                    Auro Haze özel koleksiyon parçası. Minimalist kesim, %100 pamuklu doku ve sürdürülebilir kumaş teknolojisi ile üretilmiştir. Şehir hayatının karmaşasında sade bir stil arayanlar için tasarlandı.
+                </p>
+
+                <p style="font-weight:bold; margin-bottom:10px;">Beden Seçin:</p>
+                <div class="size-selector" id="detail-sizes">
+                    <div class="size-btn" onclick="selectSize('S', this)">S</div>
+                    <div class="size-btn" onclick="selectSize('M', this)">M</div>
+                    <div class="size-btn" onclick="selectSize('L', this)">L</div>
+                    <div class="size-btn" onclick="selectSize('XL', this)">XL</div>
+                </div>
+
+                <button class="btn-add-cart" onclick="addToCartFromDetail()">SEPETE EKLE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div id="cart-step-1">
+            <div class="cart-header">
+                <span>SEPETİNİZ</span>
+                <span onclick="toggleCart()" style="cursor:pointer; font-size:1.5rem;">✕</span>
+            </div>
+            <div class="cart-items" id="cart-items-list">
+                <p style="text-align:center; color:#999; margin-top:50px;">Sepetiniz boş.</p>
+            </div>
+            <div style="margin-top:20px;">
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.2rem; margin-bottom:20px;">
+                    <span>TOPLAM:</span>
+                    <span id="cart-total">0 TL</span>
+                </div>
+                <button class="btn-checkout" onclick="showCheckout()" style="background:#333;">SİPARİŞİ TAMAMLA</button>
+            </div>
+        </div>
+
+        <div id="cart-step-2" class="checkout-section">
+            <div class="cart-header">
+                <span>TESLİMAT BİLGİLERİ</span>
+                <span onclick="showCartStep()" style="cursor:pointer; font-size:1rem;">← Geri</span>
+            </div>
+            <form onsubmit="processOrder(event)" style="margin-top:20px;">
+                <input type="text" id="cust-name" class="form-input" placeholder="Ad Soyad" required>
+                <input type="tel" id="cust-phone" class="form-input" placeholder="Telefon (05..)" required>
+                <textarea id="cust-address" class="form-input" rows="3" placeholder="Açık Adres" required></textarea>
+                <div style="font-size:0.8rem; color:#27ae60; margin-bottom:15px; padding:10px; background:#e8f8f0; border-radius:5px;">
+                    🔒 "Ödemeye Geç" butonuna bastığınızda siparişiniz WhatsApp üzerinden bize iletilecek ve ödeme linki gönderilecektir.
+                </div>
+                <button type="submit" class="btn-checkout">SİPARİŞİ ONAYLA</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

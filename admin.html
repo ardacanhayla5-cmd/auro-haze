@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Auro Haze | Admin</title>
+    <style>
+        body {
+            font-family: Inter, sans-serif;
+            background:#f4f4f4;
+            padding:40px;
+        }
+        h1 { margin-bottom:20px; }
+        .order {
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            margin-bottom:20px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.05);
+        }
+        .order h3 { margin:0 0 10px; }
+        .item { font-size:0.9rem; margin-left:15px; }
+        .total { font-weight:bold; margin-top:10px; }
+        .date { font-size:0.8rem; color:#777; }
+    </style>
+</head>
+<body>
+
+<h1>🛒 Auro Haze – Admin Panel</h1>
+
+<div id="orders">Yükleniyor...</div>
+
+<script>
+fetch("/api/admin/orders")
+    .then(r => r.json())
+    .then(data => {
+        const box = document.getElementById("orders");
+        if (data.length === 0) {
+            box.innerHTML = "Henüz sipariş yok.";
+            return;
+        }
+
+        box.innerHTML = data.map(o => `
+            <div class="order">
+                <h3>👤 ${o.customer.name}</h3>
+                <div class="date">${new Date(o.date).toLocaleString()}</div>
+                ${o.cart.map(i => `
+                    <div class="item">• ${i.name} (${i.selectedSize}) – ${i.price} TL</div>
+                `).join("")}
+                <div class="total">TOPLAM: ${o.total} TL</div>
+            </div>
+        `).join("");
+    });
+</script>
+
+</body>
+</html>
