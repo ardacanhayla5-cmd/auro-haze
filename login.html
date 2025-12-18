@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Giriş Yap | Auro Haze</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<h2>Giriş Yap</h2>
+
+<input id="email" type="email" placeholder="E-posta"><br><br>
+<input id="password" type="password" placeholder="Şifre"><br><br>
+
+<button onclick="login()">Giriş Yap</button>
+<button onclick="register()">Kayıt Ol</button>
+
+<p id="msg"></p>
+
+<script>
+const API = "http://localhost:3000";
+
+async function login(){
+  const email = email.value;
+  const password = password.value;
+
+  const res = await fetch(API + "/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+  if(data.token){
+    localStorage.setItem("token", data.token);
+    location.href = "account.html";
+  } else {
+    msg.innerText = data.error || "Giriş başarısız";
+  }
+}
+
+async function register(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch(API + "/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+  if(data.token){
+    localStorage.setItem("token", data.token);
+    location.href = "account.html";
+  } else {
+    msg.innerText = data.error || "Kayıt başarısız";
+  }
+}
+</script>
+
+</body>
+</html>

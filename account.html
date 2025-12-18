@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Hesabım | Auro Haze</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<h2>Hesabım</h2>
+<p id="email"></p>
+
+<h3>Favorilerim</h3>
+<ul id="fav"></ul>
+
+<button onclick="logout()">Çıkış Yap</button>
+
+<script>
+const API = "http://localhost:3000";
+const token = localStorage.getItem("token");
+
+if(!token){
+  location.href = "login.html";
+}
+
+async function loadProfile(){
+  const res = await fetch(API + "/api/user/me", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+  const data = await res.json();
+  email.innerText = "E-posta: " + data.email;
+
+  fav.innerHTML = "";
+  data.favorites.forEach(f => {
+    const li = document.createElement("li");
+    li.innerText = f;
+    fav.appendChild(li);
+  });
+}
+
+function logout(){
+  localStorage.removeItem("token");
+  location.href = "login.html";
+}
+
+loadProfile();
+</script>
+
+</body>
+</html>
