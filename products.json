@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "Haze Black Oversize",
+    "price": 850,
+    "img": "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=800"
+  },
+  {
+    "id": 2,
+    "name": "Auro Denim Ceket",
+    "price": 2100,
+    "img": "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?q=80&w=800"
+  },
+  {
+    "id": 3,
+    "name": "Ivory Minimalist Hoodie",
+    "price": 1400,
+    "img": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800"
+  },
+  {
+    "id": 1766017929806,
+    "name": "hamaratınki",
+    "price": 5799,
+    "img": "https://e7.pngegg.com/pngimages/85/321/png-clipart-football-cricket-balls-ball-white-sports-equipment.png"
+  }
+]

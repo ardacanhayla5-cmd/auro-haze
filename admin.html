@@ -1,56 +1,102 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>Auro Haze | Admin</title>
-    <style>
-        body {
-            font-family: Inter, sans-serif;
-            background:#f4f4f4;
-            padding:40px;
-        }
-        h1 { margin-bottom:20px; }
-        .order {
-            background:white;
-            padding:20px;
-            border-radius:10px;
-            margin-bottom:20px;
-            box-shadow:0 10px 30px rgba(0,0,0,0.05);
-        }
-        .order h3 { margin:0 0 10px; }
-        .item { font-size:0.9rem; margin-left:15px; }
-        .total { font-weight:bold; margin-top:10px; }
-        .date { font-size:0.8rem; color:#777; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Auro Haze | Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 40px;
+    }
+
+    .box {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.1);
+      margin-bottom: 20px;
+    }
+
+    h1, h2 {
+      margin-top: 0;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    button {
+      background: #111;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .product {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .product img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .actions button {
+      width: auto;
+      padding: 8px 12px;
+      margin-left: 5px;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>🛒 Auro Haze – Admin Panel</h1>
+<!-- LOGIN -->
+<div class="box" id="loginBox">
+  <h1>Admin Giriş</h1>
+  <input type="password" id="password" placeholder="Admin şifresi" />
+  <button onclick="login()">Giriş Yap</button>
+</div>
 
-<div id="orders">Yükleniyor...</div>
+<!-- PANEL -->
+<div class="box hidden" id="panelBox">
+  <h1>Ürün Yönetimi</h1>
 
-<script>
-fetch("/api/admin/orders")
-    .then(r => r.json())
-    .then(data => {
-        const box = document.getElementById("orders");
-        if (data.length === 0) {
-            box.innerHTML = "Henüz sipariş yok.";
-            return;
-        }
+  <!-- FORM -->
+  <input type="text" id="name" placeholder="Ürün adı" />
+  <input type="number" id="price" placeholder="Fiyat" />
+  <input type="file" id="image" />
 
-        box.innerHTML = data.map(o => `
-            <div class="order">
-                <h3>👤 ${o.customer.name}</h3>
-                <div class="date">${new Date(o.date).toLocaleString()}</div>
-                ${o.cart.map(i => `
-                    <div class="item">• ${i.name} (${i.selectedSize}) – ${i.price} TL</div>
-                `).join("")}
-                <div class="total">TOPLAM: ${o.total} TL</div>
-            </div>
-        `).join("");
-    });
-</script>
+  <button id="addBtn" onclick="addProduct()">Ürün Ekle</button>
 
+  <h2>Ürünler</h2>
+  <div id="productList"></div>
+</div>
+
+<script src="admin.js"></script>
 </body>
 </html>

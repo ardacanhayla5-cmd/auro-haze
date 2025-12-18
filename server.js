@@ -1,117 +1,175 @@
+console.log("__dirname:", __dirname);
+
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
-const fs = require("fs");
 const path = require("path");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
 
-// ==========================
-// ADMIN ŞİFRE (şimdilik sabit)
-// ==========================
-const ADMIN_PASSWORD = "3186arda";
+// ================== CONFIG ==================
+const PORT = 3000;
+const ADMIN_PASSWORD = "123";
+const JWT_SECRET = "auro_haze_secret_2026";
 
-// ==========================
-// DOSYALAR
-// ==========================
-const ORDERS_FILE = path.join(__dirname, "orders.json");
-const PRODUCTS_FILE = path.join(__dirname, "products.json");
+// MongoDB URI
+const MONGO_URI =
+  "mongodb+srv://auroadmin:auro12345@cluster0.vgt7z8p.mongodb.net/aurohaze?appName=Cluster0";
 
-if (!fs.existsSync(ORDERS_FILE)) fs.writeFileSync(ORDERS_FILE, "[]", "utf-8");
-if (!fs.existsSync(PRODUCTS_FILE)) fs.writeFileSync(PRODUCTS_FILE, "[]", "utf-8");
+// ================== FRONTEND PATH (KRİTİK) ==================
+const FRONTEND_PATH = path.join(__dirname, "..", "frontend");
 
-// ==========================
-// ADMIN AUTH
-// ==========================
-function adminAuth(req, res, next) {
-  const pass = req.headers["x-admin-password"];
-  if (pass !== ADMIN_PASSWORD) return res.status(401).json({ error: "Yetkisiz" });
-  next();
+// Frontend statik dosyalar
+app.use(express.static(FRONTEND_PATH));
+
+// Root her zaman index.html dönsün
+app.get("/", (req, res) => {
+  res.sendFile(path.join(FRONTEND_PATH, "index.html"));
+});
+
+// ================== MONGODB ==================
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log("MongoDB bağlandı"))
+  .catch((err) => console.log("MongoDB hata:", err.message));
+
+// ================== MODELS ==================
+
+// PRODUCT
+const ProductSchema = new mongoose.Schema({
+  name: String,
+  price: Number,
+  img: String,
+});
+const Product = mongoose.model("Product", ProductSchema);
+
+// USER
+const UserSchema = new mongoose.Schema({
+  email: { type: String, unique: true },
+  passwordHash: String,
+  favorites: [String],
+});
+const User = mongoose.model("User", UserSchema);
+
+// ================== AUTH MIDDLEWARE ==================
+function auth(req, res, next) {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (!token) return res.status(401).json({ error: "Token yok" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ error: "Token geçersiz" });
+  }
 }
 
-// ==========================
-// PUBLIC - ÜRÜNLER
-// ==========================
-app.get("/api/products", (req, res) => {
-  const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
+// ================== API ==================
+
+// PRODUCTS
+app.get("/api/products", async (req, res) => {
+  const products = await Product.find();
   res.json(products);
 });
 
-// ==========================
-// ADMIN LOGIN (basit kontrol)
-// ==========================
-app.post("/api/admin/login", (req, res) => {
-  const { password } = req.body || {};
-  if (password === ADMIN_PASSWORD) return res.json({ success: true });
-  return res.status(401).json({ success: false });
+// ================== AUTH ==================
+
+// REGISTER
+app.post("/api/auth/register", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password)
+    return res.status(400).json({ error: "Eksik bilgi" });
+
+  const exists = await User.findOne({ email });
+  if (exists) return res.status(409).json({ error: "Email kayıtlı" });
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const user = await User.create({ email, passwordHash, favorites: [] });
+
+  const token = jwt.sign(
+    { id: user._id, email: user.email },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  res.json({ token, email: user.email });
 });
 
-// ==========================
-// ADMIN - ÜRÜN EKLE
-// ==========================
-app.post("/api/admin/products", adminAuth, (req, res) => {
-  const { name, price, img } = req.body || {};
-  if (!name || !price || !img) return res.status(400).json({ error: "Eksik alan" });
+// LOGIN
+app.post("/api/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(401).json({ error: "Hatalı giriş" });
 
-  const products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
-  products.push({
-    id: Date.now(),
-    name: String(name),
-    price: Number(price),
-    img: String(img),
+  const ok = await bcrypt.compare(password, user.passwordHash);
+  if (!ok) return res.status(401).json({ error: "Hatalı giriş" });
+
+  const token = jwt.sign(
+    { id: user._id, email: user.email },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  res.json({ token, email: user.email });
+});
+
+// PROFILE
+app.get("/api/user/me", auth, async (req, res) => {
+  const user = await User.findById(req.user.id).select("email favorites");
+  res.json(user);
+});
+
+// FAVORITES
+app.post("/api/user/favorites", auth, async (req, res) => {
+  const { productId } = req.body;
+  await User.findByIdAndUpdate(req.user.id, {
+    $addToSet: { favorites: productId },
   });
-
-  fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), "utf-8");
   res.json({ success: true });
 });
 
-// ==========================
-// ADMIN - ÜRÜN SİL
-// ==========================
-app.delete("/api/admin/products/:id", adminAuth, (req, res) => {
-  const id = Number(req.params.id);
-  let products = JSON.parse(fs.readFileSync(PRODUCTS_FILE, "utf-8"));
-  products = products.filter((p) => p.id !== id);
+// ================== ADMIN ==================
 
-  fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), "utf-8");
-  res.json({ success: true });
+app.post("/api/admin/login", (req, res) => {
+  if (req.body.password === ADMIN_PASSWORD) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ error: "Şifre yanlış" });
+  }
 });
 
-// ==========================
-// SİPARİŞ OLUŞTUR
-// ==========================
-app.post("/api/create-order", (req, res) => {
-  const { customer, cart, total } = req.body || {};
-  if (!customer || !cart || typeof total !== "number") {
-    return res.status(400).json({ success: false, error: "Geçersiz sipariş" });
+app.post("/api/admin/products", async (req, res) => {
+  if (req.headers["x-admin-password"] !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "Yetkisiz" });
   }
 
-  const orders = JSON.parse(fs.readFileSync(ORDERS_FILE, "utf-8"));
-  orders.push({
-    id: Date.now(),
-    date: new Date(),
-    customer,
-    cart,
-    total,
-    status: "WAITING_PAYMENT",
-  });
-
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
-  res.json({ success: true, redirectUrl: "/payment.html" });
+  const { name, price, img } = req.body;
+  const product = new Product({ name, price, img });
+  await product.save();
+  res.json(product);
 });
 
-// ==========================
-// ADMIN - SİPARİŞLER (korumalı)
-// ==========================
-app.get("/api/admin/orders", adminAuth, (req, res) => {
-  const orders = JSON.parse(fs.readFileSync(ORDERS_FILE, "utf-8"));
-  res.json(orders.reverse());
+app.delete("/api/admin/products/:id", async (req, res) => {
+  if (req.headers["x-admin-password"] !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "Yetkisiz" });
+  }
+
+  await Product.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
 });
 
+// TEST
+app.get("/test", (req, res) => {
+  res.send("FRONTEND TEST OK");
+});
+
+// ================== START ==================
 app.listen(PORT, () => {
   console.log(`Server çalışıyor → http://localhost:${PORT}`);
 });
